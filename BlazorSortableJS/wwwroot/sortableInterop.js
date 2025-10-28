@@ -1,6 +1,6 @@
 window.initializeSortable = (container, blazorComponent, items, options) => {
     blazorComponent.items = items;
-   
+
     const common = {
         onUpdate: function (evt) {
             blazorComponent.invokeMethodAsync('UpdateItemOrder', evt.oldIndex, evt.newIndex);
@@ -16,8 +16,7 @@ window.initializeSortable = (container, blazorComponent, items, options) => {
                 const movedItem = fromComponent.items[oldIndex];
                 toComponent.items.splice(newIndex, 0, movedItem);
                 toComponent.invokeMethodAsync('AddItem', newIndex, movedItem);
-            }
-            else {
+            } else {
                 const movedItem = fromComponent.items.splice(oldIndex, 1)[0];
                 fromComponent.invokeMethodAsync('RemoveItem', oldIndex);
                 toComponent.items.splice(newIndex, 0, movedItem);
@@ -33,7 +32,7 @@ window.initializeSortable = (container, blazorComponent, items, options) => {
     //    ghostClass: "blue-background-class",
     //    chosenClass: "sortable-chosen",
     //    dragClass: "sortable-drag",
-        
+
     //});
     container.__blazor_component = blazorComponent;
 };

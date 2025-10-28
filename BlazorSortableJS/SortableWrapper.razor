@@ -8,15 +8,17 @@
 @code {
     [Parameter] public RenderFragment ChildContent { get; set; }
     [Parameter] public EventCallback OnDataChanged { get; set; }
+    
     public Func<Task>? OnRefresh { get; set; }
+    
     private bool _shouldRender;
     private bool _hasPreRendered;
+
     protected override bool ShouldRender()
     {
         return _shouldRender;
     }
-
-
+    
     public async Task NotifyDropZoneRendered<TItem>(Sortable<TItem> sortable)
     {
         await JSRuntime.InvokeVoidAsync("initializeSortable", sortable._dropZoneContainer, DotNetObjectReference.Create(sortable), sortable.Items, sortable.Options);
@@ -33,6 +35,7 @@
         {
             _hasPreRendered = true;
         }
+
         if (_hasPreRendered)
         {
             _shouldRender = false;
@@ -46,4 +49,5 @@
             await OnRefresh.Invoke();
         await InvokeAsync(StateHasChanged);
     }
+
 }

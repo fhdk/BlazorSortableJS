@@ -1,31 +1,24 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System.Text.Json;
 
 namespace BlazorSortableJS
 {
     public partial class Sortable<TItem> : IAsyncDisposable
     {
-        [CascadingParameter]
-        public SortableWrapper? ParentSortable { get; set; }
+        [Inject] private IJSRuntime JsRuntime { get; set; }
+        [CascadingParameter] public SortableWrapper? ParentSortable { get; set; }
 
-        [Parameter]
-        public List<TItem> Items { get; set; } = new List<TItem> { };
+        [Parameter] public List<TItem> Items { get; set; } = new List<TItem> { };
         private List<KeyedItem<TItem>> _keyedItems = new();
         private List<TItem> _lastItems = new();
-        [Parameter]
-        public RenderFragment<TItem> Template { get; set; } = null!;
+        [Parameter] public RenderFragment<TItem> Template { get; set; } = null!;
 
-        [Parameter]
-        public RenderFragment? ChildContent { get; set; }
+        [Parameter] public RenderFragment? ChildContent { get; set; }
 
-        [Parameter]
-        public Func<Task>? OnDataChanged { get; set; }
+        [Parameter] public Func<Task>? OnDataChanged { get; set; }
 
-        [Parameter]
-        public string Class { get; set; } = string.Empty;
-        [Parameter]
-        public object? Options { get; set; } 
+        [Parameter] public string Class { get; set; } = string.Empty;
+        [Parameter] public object? Options { get; set; }
 
         internal ElementReference _dropZoneContainer;
         private bool _shouldRender = true;
@@ -35,15 +28,15 @@ namespace BlazorSortableJS
         {
             if (!_lastItems.SequenceEqual(Items))
             {
-                _lastItems = Items.Select(x => x).ToList() ;
-                _keyedItems = Items.Select((item, index) => new KeyedItem<TItem> { Key = Guid.NewGuid().ToString(), Item = item }).ToList();
-
+                _lastItems = Items.Select(x => x).ToList();
+                _keyedItems = Items.Select((item, index) => new KeyedItem<TItem>
+                    { Key = Guid.NewGuid().ToString(), Item = item }).ToList();
             }
         }
 
         protected override void OnInitialized()
         {
-            if(ParentSortable != null)
+            if (ParentSortable != null)
                 ParentSortable.OnRefresh += ParentSortable_OnRefresh;
         }
 
@@ -56,9 +49,10 @@ namespace BlazorSortableJS
             if (!_lastItems.SequenceEqual(Items))
             {
                 _lastItems = Items.Select(x => x).ToList();
-                _keyedItems = Items.Select((item, index) => new KeyedItem<TItem> { Key = Guid.NewGuid().ToString(), Item = item }).ToList();
-
+                _keyedItems = Items.Select((item, index) => new KeyedItem<TItem>
+                    { Key = Guid.NewGuid().ToString(), Item = item }).ToList();
             }
+
             await InvokeAsync(StateHasChanged);
         }
 
@@ -68,6 +62,7 @@ namespace BlazorSortableJS
             {
                 _hasPreRendered = true;
             }
+
             if (_hasPreRendered && _shouldRender)
             {
                 if (ParentSortable != null)
@@ -75,6 +70,7 @@ namespace BlazorSortableJS
                     await Task.Delay(100);
                     await ParentSortable.NotifyDropZoneRendered(this);
                 }
+
                 _shouldRender = false;
             }
         }
@@ -85,10 +81,14 @@ namespace BlazorSortableJS
             {
                 try
                 {
-                    await JSRuntime.InvokeVoidAsync("destroySortable", _dropZoneContainer);
+                    await JsRuntime.InvokeVoidAsync("destroySortable", _dropZoneContainer);
                 }
-                catch { }
-                if(ParentSortable.OnRefresh != null)
+                catch
+                {
+                    // ignored
+                }
+
+                if (ParentSortable.OnRefresh != null)
                     ParentSortable.OnRefresh -= ParentSortable_OnRefresh;
             }
         }
@@ -110,7 +110,8 @@ namespace BlazorSortableJS
                     await ParentSortable.OnDataChanged.InvokeAsync();
                 await ParentSortable.RefreshAsync();
             }
-            if(OnDataChanged is not null)
+
+            if (OnDataChanged is not null)
             {
                 await OnDataChanged.Invoke();
             }
@@ -126,6 +127,7 @@ namespace BlazorSortableJS
                     await ParentSortable.OnDataChanged.InvokeAsync();
                 await ParentSortable.RefreshAsync();
             }
+
             if (OnDataChanged is not null)
             {
                 await OnDataChanged.Invoke();
@@ -135,18 +137,18 @@ namespace BlazorSortableJS
         [JSInvokable]
         public async Task AddItem(int index, TItem item)
         {
-            Items.Insert(index, item );
+            Items.Insert(index, item);
             if (ParentSortable != null)
             {
                 if (ParentSortable.OnDataChanged.HasDelegate)
                     await ParentSortable.OnDataChanged.InvokeAsync();
                 await ParentSortable.RefreshAsync();
             }
+
             if (OnDataChanged is not null)
             {
                 await OnDataChanged.Invoke();
             }
         }
-
     }
 }
